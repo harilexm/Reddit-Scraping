@@ -16,7 +16,7 @@ TARGET_SUBS = [
 ]
 
 GOAL_LINKS = 2000 
-OUTPUT_FILE = "massive_thread_list1.csv"
+OUTPUT_FILE = "links.csv"
 
 # Setup Driver
 options = webdriver.ChromeOptions()
