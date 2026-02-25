@@ -46,14 +46,14 @@ INPUT_FILE = r"C:\Users\DeLL\Desktop\Reddit Scraping\ScrapeLinks\links1.csv"
 OUTPUT_FILE = "commentsScrape.csv"
 PROGRESS_FILE = "scrape_progress.txt"
 
-# Configuration
-# HYBRID BATCH APPROACH:
-# - Phase 1: Batch check 100 post IDs at once using /api/info (counts as 1 request)
-# - Phase 2: Fetch comments only for valid posts (individual requests)
-# Result: Skip deleted/404 posts, save requests!
+
+'''HYBRID BATCH APPROACH:
+    Phase 1: Batch check 100 post IDs at once using /api/info (counts as 1 request)
+    Phase 2: Fetch comments only for valid posts (individual requests)
+    Result: Skip deleted/404 posts, save requests!'''
 
 BATCH_CHECK_SIZE = 100  # Check 100 post IDs per request (Reddit limit)
-REQUESTS_PER_MINUTE = 15  # Rate for comment fetching
+REQUESTS_PER_MINUTE = 10  # Rate for comment fetching
 CONCURRENT_REQUESTS = 2
 MAX_RETRIES = 3
 
