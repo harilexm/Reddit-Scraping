@@ -6,9 +6,6 @@ import json
 import os
 from datetime import datetime, timedelta
 
-# ============================================================
-# CONFIGURATION
-# ============================================================
 TARGET_SUBS = [
     # Major Cities & Regions
     "pakistan", "karachi", "islamabad", "lahore", "peshawar", "quetta", "multan", "faisalabad", "rawalpindi", "kashmir", "gilgitbaltistan",
@@ -27,7 +24,7 @@ TARGET_SUBS = [
 ]
 
 SORT_ORDERS = ["controversial", "top", "new", "hot"]
-GOAL_LINKS = 50000
+GOAL_LINKS = 50000 # Change to as many links you want
 OUTPUT_FILE = "links2.csv"
 PROGRESS_FILE = "link_scrape_progress.json"
 MAX_PAGES_PER_SORT = 40  # 40 pages × 100 posts = 4000 posts max per sort
@@ -37,9 +34,8 @@ headers = {
     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) RedditLinkScraper/2.0 by ScrapeUmer'
 }
 
-# ============================================================
+
 # PROGRESS TRACKING (Resume Support)
-# ============================================================
 def save_progress(completed_subs, collected_links):
     """Save current progress to resume after crash/interrupt."""
     data = {
@@ -65,9 +61,7 @@ def cleanup_progress():
     except:
         pass
 
-# ============================================================
 # TIMING UTILITIES
-# ============================================================
 def format_duration(seconds):
     """Format seconds into human-readable string."""
     if seconds < 60:
@@ -88,9 +82,7 @@ def estimate_eta(elapsed, done, total):
     remaining = (total - done) * rate
     return format_duration(remaining)
 
-# ============================================================
 # SCRAPING LOGIC (JSON API)
-# ============================================================
 def scrape_subreddit(sub, sort, collected_links):
     """
     Scrape links from a subreddit using old.reddit.com JSON API.
@@ -167,9 +159,7 @@ def scrape_subreddit(sub, sort, collected_links):
     
     return new_count
 
-# ============================================================
 # MAIN
-# ============================================================
 def main():
     print(f"\n{'='*70}")
     print(f"🚀 REDDIT LINK SCRAPER v2.0 (JSON API)")
@@ -206,7 +196,7 @@ def main():
     try:
         for idx, sub in enumerate(remaining_subs):
             if len(collected_links) >= GOAL_LINKS:
-                print(f"\n🎯 Goal of {GOAL_LINKS:,} links reached!")
+                print(f"\n Goal of {GOAL_LINKS:,} links reached!")
                 break
             
             sub_start = time.time()
@@ -214,20 +204,20 @@ def main():
             eta = estimate_eta(elapsed_total, idx, total_subs) if idx > 0 else "calculating..."
             
             print(f"[{idx+1}/{total_subs}] r/{sub}")
-            print(f"  ⏱️  Elapsed: {format_duration(elapsed_total)} | ETA: {eta} | Links: {len(collected_links):,}")
+            print(f"  ⏱ Elapsed: {format_duration(elapsed_total)} | ETA: {eta} | Links: {len(collected_links):,}")
             
             sub_new = 0
             for sort in SORT_ORDERS:
                 sort_new = scrape_subreddit(sub, sort, collected_links)
                 sub_new += sort_new
                 if sort_new > 0:
-                    print(f"  📋 /{sort}: +{sort_new} links")
+                    print(f" /{sort}: +{sort_new} links")
                 
                 if len(collected_links) >= GOAL_LINKS:
                     break
             
             sub_time = time.time() - sub_start
-            print(f"  ✅ r/{sub} done: +{sub_new} new | {format_duration(sub_time)} | Total: {len(collected_links):,}\n")
+            print(f" r/{sub} done: +{sub_new} new | {format_duration(sub_time)} | Total: {len(collected_links):,}\n")
             
             # Save checkpoint after each subreddit
             completed_subs.append(sub)
@@ -236,7 +226,7 @@ def main():
                 save_progress(completed_subs, collected_links)
     
     except KeyboardInterrupt:
-        print(f"\n⚠️  Interrupted! Progress saved. Run again to resume.")
+        print(f"\n Interrupted! Progress saved. Run again to resume.")
     
     finally:
         # Final save
@@ -247,7 +237,7 @@ def main():
             save_progress(completed_subs, collected_links)
         
         print(f"\n{'='*70}")
-        print(f"📊 FINAL RESULTS")
+        print(f"FINAL RESULTS")
         print(f"{'='*70}")
         print(f"  Total links:  {len(collected_links):,}")
         print(f"  Total time:   {format_duration(total_time)}")
@@ -261,7 +251,7 @@ def main():
         # Clean up progress file only if fully complete
         if len(completed_subs) >= len(TARGET_SUBS) or len(collected_links) >= GOAL_LINKS:
             cleanup_progress()
-            print("✨ Scrape complete! Progress file cleaned up.")
+            print(" Scrape complete! Progress file cleaned up.")
 
 if __name__ == "__main__":
     main()
