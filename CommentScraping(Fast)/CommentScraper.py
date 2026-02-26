@@ -10,7 +10,7 @@ from nltk.corpus import stopwords
 from urllib.parse import urlparse
 from datetime import datetime, timedelta
 
-# fastText-based language detection (pip install fast-langdetect)
+# fastText-based language detection
 try:
     from fast_langdetect import detect as ft_detect
     FASTTEXT_AVAILABLE = True
@@ -28,9 +28,7 @@ except LookupError:
 
 english_stops = set(stopwords.words('english'))
 
-# ============================================================
-# ROMAN URDU MARKERS (Extended Set)
-# ============================================================
+# ROMAN URDU MARKERS
 urdu_markers = {
     # Pronouns
     'main', 'mein', 'mjhe', 'mujhe', 'mera', 'meri', 'mere', 'hum', 'humein', 'hm', 'hamara', 
@@ -57,7 +55,6 @@ urdu_markers = {
     'acha', 'achha', 'wese', 'wesay', 'matlab', 'bas', 'bs', 'yaar', 'yar', 'bhai', 
     'shyd', 'shayed', 'bilkul', 'zaroor', 'ab', 'abhi',
     
-    # === EXTENDED SET (50+ new words) ===
     # Common everyday words
     'kuch', 'bohot', 'bohat', 'bahut', 'sab', 'koi', 'dusra', 'pehle', 'baad',
     'wala', 'wali', 'wale', 'ghar', 'dost', 'log', 'cheez', 'kaam', 'din',
@@ -89,16 +86,12 @@ URDU_BIGRAMS = {
     'pata nahi', 'sab log', 'koi nahi', 'bilkul nahi', 'zaroor hai',
 }
 
-# ============================================================
 # FILE CONFIGURATION
-# ============================================================
 INPUT_FILE = r"C:\Users\DeLL\Desktop\Reddit Scraping\ScrapeLinks\links1.csv"
 OUTPUT_FILE = "commentsScrape1.csv"
 PROGRESS_FILE = "scrape_progress1.txt"
 
-# ============================================================
 # SCRAPING CONFIGURATION
-# ============================================================
 '''HYBRID BATCH APPROACH + MORE CHILDREN:
     Phase 1: Batch check 100 post IDs at once using /api/info (counts as 1 request)
     Phase 2: Fetch comments for valid posts (individual requests) WITH limit=500
@@ -114,9 +107,7 @@ headers = {
     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) RomanUrduHunter/3.0 by ScrapeUmer'
 }
 
-# ============================================================
 # TIMING UTILITIES
-# ============================================================
 def format_duration(seconds):
     """Format seconds into human-readable string."""
     if seconds < 60:
@@ -138,28 +129,8 @@ def estimate_eta(elapsed, done, total):
     eta_time = datetime.now() + timedelta(seconds=remaining)
     return f"{format_duration(remaining)} (finish ~{eta_time.strftime('%H:%M:%S')})"
 
-# ============================================================
-# COMMENT CLEANING PIPELINE
-# ============================================================
-def clean_comment(text):
-    """Clean Reddit comment text: remove URLs, markdown, quotes, excess whitespace."""
-    # Remove URLs
-    text = re.sub(r'https?://\S+', '', text)
-    # Remove Reddit-style quotes
-    text = re.sub(r'&gt;.*', '', text)
-    # Remove markdown links [text](url)
-    text = re.sub(r'\[.*?\]\(.*?\)', '', text)
-    # Remove markdown formatting characters
-    text = re.sub(r'[*_~`#]', '', text)
-    # Remove newlines/carriage returns
-    text = text.replace("\n", " ").replace("\r", " ")
-    # Collapse excess whitespace
-    text = re.sub(r'\s+', ' ', text).strip()
-    return text if len(text) > 10 else None
 
-# ============================================================
 # ROMAN URDU DETECTION (Enhanced with fastText + Bigrams)
-# ============================================================
 def is_roman_urdu(text):
     """
     Enhanced Roman Urdu detection using:
@@ -226,11 +197,10 @@ def get_comments_from_json(data, comments_list, more_ids=None):
     if isinstance(data, dict):
         if data.get('kind') == 't1':
             body = data.get('data', {}).get('body', '')
-            if body:
-                # Clean first, then check language
-                cleaned = clean_comment(body)
-                if cleaned and not contains_urdu_script(cleaned) and is_roman_urdu(cleaned):
-                    comments_list.append(cleaned)
+            if body and not contains_urdu_script(body) and is_roman_urdu(body):
+                clean_text = body.replace("\n", " ").replace("\r", " ").strip()
+                if len(clean_text) > 10:
+                    comments_list.append(clean_text)
         elif data.get('kind') == 'more':
             # Collect hidden comment IDs for Phase 3!
             children = data.get('data', {}).get('children', [])
@@ -366,10 +336,10 @@ async def fetch_more_children(session, link_id, children_ids, rate_limiter):
                         for thing in things:
                             if thing.get('kind') == 't1':
                                 body = thing.get('data', {}).get('body', '')
-                                if body:
-                                    cleaned = clean_comment(body)
-                                    if cleaned and not contains_urdu_script(cleaned) and is_roman_urdu(cleaned):
-                                        all_comments.append(cleaned)
+                                if body and not contains_urdu_script(body) and is_roman_urdu(body):
+                                    clean_text = body.replace("\n", " ").replace("\r", " ").strip()
+                                    if len(clean_text) > 10:
+                                        all_comments.append(clean_text)
                         break  # Success
                     elif resp.status == 429:
                         reset_after = int(resp.headers.get('X-Ratelimit-Reset', 60))
